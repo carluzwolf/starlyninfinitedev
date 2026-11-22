@@ -56,7 +56,7 @@ static void cfApply(int s) {
   S.er2 = c.c[6]; S.eg2 = c.c[7]; S.eb2 = c.c[8]; S.pr2 = c.c[9]; S.pg2 = c.c[10]; S.pb2 = c.c[11];
   S.gA = c.gA ? 1.0f : 0.0f; S.gbr = c.gb0; S.gbg = c.gb1; S.gbb = c.gb2;
   S.rx = 33 * KS * c.rxS * 0.01f; S.ry = 44 * KS * c.ryS * 0.01f;
-  S.prx = 16.3f * KS * c.psS * 0.01f; S.pry = S.prx;
+  S.prx = 12.7f * KS * c.psS * 0.01f; S.pry = 16.3f * KS * c.psS * 0.01f;
   S.rot = 7.0f + c.tilt; S.gap = 37 * KS + c.gap; S.cutBot = c.cutBot * 0.01f;
   S.pSlit = (c.shape == 1); S.pHeart = (c.shape == 2); S.pStar = (c.shape == 3); S.pDollar = (c.shape == 4);
   S.pSpiral = (c.shape == 5); S.pCross = (c.shape == 6); S.pBolt = (c.shape == 7); S.pFlower = (c.shape == 8);
@@ -156,7 +156,7 @@ function patch(src, S) {
     if (n !== 1) throw new Error('Ponto de edicao nao encontrado no .ino (' + n + 'x): ' + a.slice(0, 50));
     t = t.replace(a, () => b);
   }
-  return '/* STARLYN STUDIO: arquivo gerado a partir do starboy_v12_ble.ino pelo site (rostos 77..92, reacoes 130..137). */\n' + t;
+  return '/* STARLYN STUDIO: arquivo gerado a partir do starboy_v13_ble.ino pelo site (rostos 77..92, reacoes 130..137). */\n' + t;
 }
 
 g.StarboyExport = { patch, bleFace, bleReact, KF_SLOTS, KF_MAXK, CF_SLOTS };
