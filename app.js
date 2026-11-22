@@ -11,7 +11,7 @@ const D2R = Math.PI / 180;
 const SHAPES = ['Redonda', 'Fenda de gato', 'Coração', 'Estrela', 'Cifrão', 'Espiral', 'Mira', 'Raio', 'Flor'];
 
 /* ---------- dados ---------- */
-const newFace = (n = 'Novo olho') => ({ name: n, eL: '#ff42c4', pL: '#fadcb8', eR: '#ff42c4', pR: '#fadcb8', link: true, grad: false, gb: '#ff3282', rx: 1, ry: 1, ps: 1, tilt: 0, gap: 0, cutBot: .2, shape: 0 });
+const newFace = (n = 'Novo olho') => ({ name: n, eL: '#ff42c4', pL: '#fadcb8', eR: '#ff42c4', pR: '#fadcb8', link: true, grad: false, gb: '#ff3282', rx: 1, ry: 1, ps: 1, tilt: 0, gap: 0, cutBot: 0, shape: 0 });
 const KF0 = () => ({ t: 0, gx: 0, gy: 0, cT: 0, cB: 0, lid: 0, rot: 0, sq: 0, ps: 1, sc: 1, cheek: 0, arc: 0, tk: 0, tc: '#ff4060', odx: 0, ody: 0, orot: 0, oz: 0, shape: 0 });
 const PRESETS = [
   ['Rosa original', '#ff42c4', '#fadcb8'], ['Azul elétrico', '#2e5cff', '#aaebff'], ['Verde neon', '#3cff78', '#fffa96'],
@@ -26,7 +26,7 @@ const TPL = [
   ['Bravo', 2200, [{ t: 0 }, { t: 300, cT: .45, lid: -24, tk: .5, tc: '#ff2828' }, { t: 1800, cT: .45, lid: -24, tk: .5, tc: '#ff2828', odx: 3 }, { t: 2200 }]]
 ];
 const mkReact = i => { const [name, dur, ks] = TPL[i % TPL.length]; return { name, dur, w: 5, keys: ks.map(k => ({ ...KF0(), ...k })) }; };
-const LS = 'starlyn-studio-v1';
+const LS = 'starlyn-studio-v2';
 let S = null;
 try { S = JSON.parse(localStorage.getItem(LS)); } catch (e) { }
 if (!S || !S.faces || !S.reacts) S = { faces: [newFace('Rosa original')], reacts: [mkReact(0)], fi: 0, ri: 0, ki: 0 };
@@ -38,7 +38,7 @@ function faceP(f) {
   const l = f.link, [a, b, c] = hex2(f.eL), [d, e, g] = hex2(f.pL), [a2, b2, c2] = hex2(l ? f.eL : f.eR), [d2, e2, g2] = hex2(l ? f.pL : f.pR), [x, y, z] = hex2(f.gb);
   return { er: a, eg: b, eb: c, pr: d, pg: e, pb: g, er2: a2, eg2: b2, eb2: c2, pr2: d2, pg2: e2, pb2: g2, gA: f.grad ? 1 : 0, gbr: x, gbg: y, gbb: z,
     rx: 42.24 * f.rx, ry: 56.32 * f.ry, rot: 7 + f.tilt, gap: 47.36 + f.gap, cy: 112.3, cutTop: 0, cutBot: f.cutBot, lid: 0,
-    prx: 20.86 * f.ps, pry: 20.86 * f.ps, px: -14.72, py: 4.48, ps: 1, squint: 0, arc: 0, bend: -9, cheek: 0, scL: 1, scR: 1,
+    prx: 16.26 * f.ps, pry: 20.86 * f.ps, px: -11.78, py: 8.83, ps: 1, squint: 0, arc: 0, bend: -9, cheek: 0, scL: 1, scR: 1,
     odx: 0, ody: 0, orot: 0, oz: 1, gx: 0, gy: 0, conv: 1, shape: f.shape };
 }
 function sample(keys, t) {
@@ -77,7 +77,7 @@ function drawShape(ctx, sh, rx, ry, col) {
 function drawEye(ctx, P, side, bl) {
   const k = side < 0, sc = k ? P.scL : P.scR, cl = Math.max(bl, P.squint), arc = P.arc;
   const RX = P.rx * sc, RY0 = P.ry * sc, sy = Math.max((1 - cl * .96) * (1 - .94 * ease(arc / .55)), .03), RY = RY0 * sy;
-  const cx = 120 + side * P.gap + side * (sc - 1) * P.rx * .35, cy = P.cy + RY0 * (1 - 2 * P.cutBot) * Math.max(cl, bl * .93) * .96;
+  const cx = 120 + side * P.gap + side * (sc - 1) * P.rx * .35, cy = P.cy + RY0 * (3 * P.cutBot) * Math.max(cl, bl * .93) * .96;
   const rot = side * P.rot * (1 - .8 * Math.min(1, bl)) * (1 - .75 * arc);
   const ec = k ? [P.er, P.eg, P.eb] : [P.er2, P.eg2, P.eb2], pc = k ? [P.pr, P.pg, P.pb] : [P.pr2, P.pg2, P.pb2];
   const bodyA = 1 - ease((arc - .56) / .22);
@@ -114,7 +114,7 @@ class Sim {
   constructor(cv) {
     this.ctx = cv.getContext('2d'); this.mode = 'idle'; this.rest = 'idle'; this.cur = null; this.mid = null; this.last = performance.now();
     this.g = { x: 0, y: 0, sx: 0, sy: 0, tx: 0, ty: 0, t0: 0, d: 1, next: 0 }; this.b = { on: false, t0: 0, c: 80, h: 40, o: 200, next: 1500 };
-    this.rx = null; this.t0 = 0; this.loop = false; this.pose = null; this.onEnd = null; requestAnimationFrame(t => this.frame(t));
+    this.dome = 0; this.domeS = 0; this.moodNext = 3000; this.rx = null; this.t0 = 0; this.loop = false; this.pose = null; this.onEnd = null; requestAnimationFrame(t => this.frame(t));
   }
   play(r) { this.rx = r; this.t0 = performance.now(); this.mode = 'play'; }
   stop() { this.mode = this.rest; }
@@ -128,7 +128,9 @@ class Sim {
     let bl = 0;
     if (b.on) { const t = ts - b.t0; if (t < b.c) bl = ease(t / b.c); else if (t < b.c + b.h) bl = 1; else if (t < b.c + b.h + b.o) bl = Math.pow(1 - (t - b.c - b.h) / b.o, 3); else b.on = false; }
     const T = faceP(curFace()); let tau = 110;
-    if (this.mode === 'idle') { T.gx = g.x; T.gy = g.y; }
+    if (ts >= this.moodNext) { const q = Math.random(); this.dome = q < .55 ? .2 : 0; this.moodNext = ts + 5000 + Math.random() * 9000; }   // V13: cúpula ~50% do tempo
+    this.domeS += (this.dome - this.domeS) * (1 - Math.exp(-dt / 650));
+    if (this.mode === 'idle') { T.gx = g.x; T.gy = g.y; T.cutBot += this.domeS; }
     else if (this.mode === 'pose') { if (this.pose) kfApply(T, this.pose); }
     else if (this.mode === 'play') {
       let t = ts - this.t0; const r = this.rx;
@@ -329,7 +331,7 @@ function renderExport() {
   P.append(el('<h3>Bluetooth</h3><div class="card"><p style="margin-top:0" id="btState">Desconectado</p><div class="btnrow"><button class="solid" id="xConn">' + ic('bt') + 'Conectar / desconectar</button><button class="ghost" id="xAll" data-needbt>' + ic('send') + 'Enviar tudo ao robô</button></div><div class="row" style="margin-top:12px"><button class="ghost sm" id="xBlink" data-needbt>Piscar</button><button class="ghost sm" id="xChg" data-needbt>Simular carregando</button><button class="ghost sm" id="xRand" data-needbt>Rosto aleatório</button></div></div><div class="log" id="log"></div>'));
   P.append(el('<p class="ids">O envio pelo Bluetooth grava na memória temporária do robô (some ao desligar). Para deixar permanente, baixe o .ino e grave na placa. O robô precisa estar com o .ino gerado por este site.</p>'));
   $('#xIno').onclick = async () => {
-    try { const t = await (await fetch('starboy_v12_ble.ino')).text(); dl('starboy_v12_studio.ino', StarboyExport.patch(t, S), 'text/plain'); toast('.ino gerado'); }
+    try { const t = await (await fetch('starboy_v13_ble.ino')).text(); dl('starboy_v12_studio.ino', StarboyExport.patch(t, S), 'text/plain'); toast('.ino gerado'); }
     catch (e) { toast('Não deu para gerar: ' + e.message); log('erro: ' + e.message); }
   };
   $('#xJson').onclick = () => dl('starlyn-projeto.json', JSON.stringify(S, null, 1), 'application/json');
